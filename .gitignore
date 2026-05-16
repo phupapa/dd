@@ -1,0 +1,4 @@
+# Ignore download files
+downloads/
+ 
+*.history 
