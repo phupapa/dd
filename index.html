@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Static HTML Loader</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0b1020;
+        --panel: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.14);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: #7c5cff;
+        --accent2: #22c55e;
+        --danger: #ef4444;
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f5f6ff;
+          --panel: rgba(0, 0, 0, 0.04);
+          --border: rgba(0, 0, 0, 0.12);
+          --text: rgba(0, 0, 0, 0.88);
+          --muted: rgba(0, 0, 0, 0.62);
+          --shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(1200px 800px at 20% 10%, rgba(124, 92, 255, 0.35), transparent 55%),
+          radial-gradient(900px 600px at 80% 30%, rgba(34, 197, 94, 0.22), transparent 55%),
+          var(--bg);
+        color: var(--text);
+      }
+
+      header {
+        padding: 28px 18px 10px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+        font-size: clamp(22px, 2.3vw, 30px);
+      }
+
+      p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      main {
+        padding: 14px 18px 28px;
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        gap: 14px;
+        grid-template-columns: 360px 1fr;
+        align-items: start;
+      }
+
+      @media (max-width: 920px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+      }
+
+      .card .content {
+        padding: 14px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .hint {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .drop {
+        margin-top: 12px;
+        border-radius: 14px;
+        border: 1px dashed var(--border);
+        padding: 14px;
+        min-height: 116px;
+        display: grid;
+        place-items: center;
+        gap: 10px;
+        text-align: center;
+        transition:
+          border-color 120ms ease,
+          background 120ms ease,
+          transform 120ms ease;
+      }
+
+      .drop.active {
+        border-color: color-mix(in oklab, var(--accent) 70%, var(--border));
+        background: color-mix(in oklab, var(--accent) 10%, transparent);
+        transform: translateY(-1px);
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: color-mix(in oklab, var(--panel) 60%, transparent);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 9px 12px;
+        font-weight: 650;
+        cursor: pointer;
+        transition:
+          transform 120ms ease,
+          border-color 120ms ease,
+          background 120ms ease;
+        user-select: none;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: color-mix(in oklab, var(--accent) 60%, var(--border));
+      }
+
+      .btn.primary {
+        border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
+        background: color-mix(in oklab, var(--accent) 22%, var(--panel));
+      }
+
+      .btn.danger {
+        border-color: color-mix(in oklab, var(--danger) 55%, var(--border));
+        background: color-mix(in oklab, var(--danger) 14%, var(--panel));
+      }
+
+      .meta {
+        margin-top: 12px;
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+      }
+
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 13px;
+      }
+
+      .kv .k {
+        color: var(--muted);
+      }
+
+      .kv .v {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+          monospace;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 230px;
+        text-align: right;
+      }
+
+      .viewer {
+        height: min(78vh, 900px);
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .viewer .bar {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--danger);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 20%, transparent);
+      }
+
+      .dot.ok {
+        background: var(--accent2);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent2) 20%, transparent);
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #fff;
+      }
+
+      .footer {
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      input[type="file"] {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>หน้าโหลดไฟล์ HTML แบบ Static</h1>
+      <p>เลือกไฟล์ <strong>.html</strong> จากเครื่อง (หรือ drag & drop) แล้วแสดงผลในกรอบด้านขวา</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="content">
+          <div class="row">
+            <strong>นำเข้าไฟล์</strong>
+            <div class="row" style="justify-content: flex-end">
+              <button class="btn primary" id="btnPick" type="button">เลือกไฟล์</button>
+              <button class="btn danger" id="btnClear" type="button" disabled>ล้าง</button>
+            </div>
+          </div>
+
+          <div class="drop" id="drop">
+            <div>
+              <div style="font-weight: 700">ลากไฟล์มาวางที่นี่</div>
+              <div class="hint">รองรับ .html / .htm (อ่านในเครื่องด้วย FileReader แล้ว render ผ่าน iframe srcdoc)</div>
+            </div>
+          </div>
+
+          <input id="fileInput" type="file" accept=".html,.htm,text/html" />
+
+          <div class="meta" id="meta" aria-live="polite">
+            <div class="kv">
+              <div class="k">สถานะ</div>
+              <div class="v" id="status">ยังไม่ได้เลือกไฟล์</div>
+            </div>
+            <div class="kv">
+              <div class="k">ชื่อไฟล์</div>
+              <div class="v" id="name">-</div>
+            </div>
+            <div class="kv">
+              <div class="k">ขนาด</div>
+              <div class="v" id="size">-</div>
+            </div>
+          </div>
+
+          <div class="footer">
+            หมายเหตุ: ถ้าไฟล์มีการอ้างอิง resource แบบ relative (เช่น <code>./style.css</code>) อาจไม่โหลด เพราะไม่ได้
+           อยู่ใน origin เดียวกัน
+          </div>
+        </div>
+      </section>
+
+      <section class="card viewer">
+        <div class="bar">
+          <div class="badge">
+            <span class="dot" id="dot"></span>
+            <span id="badgeText">Preview: ว่าง</span>
+          </div>
+          <button class="btn" id="btnOpenNewTab" type="button" disabled>เปิดในแท็บใหม่</button>
+        </div>
+        <iframe
+          id="preview"
+          title="HTML Preview"
+          sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+        ></iframe>
+      </section>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const btnPick = document.getElementById("btnPick");
+      const btnClear = document.getElementById("btnClear");
+      const drop = document.getElementById("drop");
+      const preview = document.getElementById("preview");
+      const statusEl = document.getElementById("status");
+      const nameEl = document.getElementById("name");
+      const sizeEl = document.getElementById("size");
+      const dot = document.getElementById("dot");
+      const badgeText = document.getElementById("badgeText");
+      const btnOpenNewTab = document.getElementById("btnOpenNewTab");
+
+      let currentObjectUrl = null;
+      let currentHtmlText = "";
+
+      function formatBytes(bytes) {
+        if (typeof bytes !== "number" || !Number.isFinite(bytes)) return "-";
+        const units = ["B", "KB", "MB", "GB"];
+        let value = bytes;
+        let unit = units[0];
+        for (let i = 1; i < units.length && value >= 1024; i++) {
+          value /= 1024;
+          unit = units[i];
+        }
+        return `${value.toFixed(value >= 10 || unit === "B" ? 0 : 1)} ${unit}`;
+      }
+
+      function setIdle() {
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+        currentHtmlText = "";
+        preview.removeAttribute("srcdoc");
+        preview.src = "about:blank";
+        statusEl.textContent = "ยังไม่ได้เลือกไฟล์";
+        nameEl.textContent = "-";
+        sizeEl.textContent = "-";
+        dot.classList.remove("ok");
+        badgeText.textContent = "Preview: ว่าง";
+        btnClear.disabled = true;
+        btnOpenNewTab.disabled = true;
+      }
+
+      async function loadFile(file) {
+        if (!file) return;
+        const isHtml = (file.type && file.type.includes("html")) || /\.(html?|HTML?)$/.test(file.name);
+        if (!isHtml) {
+          statusEl.textContent = "ไฟล์ไม่ใช่ HTML";
+          dot.classList.remove("ok");
+          badgeText.textContent = "Preview: ไม่รองรับ";
+          btnClear.disabled = false;
+          btnOpenNewTab.disabled = true;
+          return;
+        }
+
+        statusEl.textContent = "กำลังอ่านไฟล์...";
+        nameEl.textContent = file.name || "(ไม่มีชื่อ)";
+        sizeEl.textContent = formatBytes(file.size);
+
+        const text = await file.text();
+        currentHtmlText = text;
+        preview.srcdoc = text;
+        dot.classList.add("ok");
+        badgeText.textContent = "Preview: พร้อม";
+        statusEl.textContent = "โหลดแล้ว";
+        btnClear.disabled = false;
+        btnOpenNewTab.disabled = false;
+      }
+
+      btnPick.addEventListener("click", () => fileInput.click());
+      btnClear.addEventListener("click", () => {
+        fileInput.value = "";
+        setIdle();
+      });
+
+      fileInput.addEventListener("change", () => loadFile(fileInput.files?.[0]));
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((ev) => {
+        drop.addEventListener(ev, preventDefaults, false);
+      });
+
+      ["dragenter", "dragover"].forEach((ev) => {
+        drop.addEventListener(
+          ev,
+          () => {
+            drop.classList.add("active");
+          },
+          false,
+        );
+      });
+
+      ["dragleave", "drop"].forEach((ev) => {
+        drop.addEventListener(
+          ev,
+          () => {
+            drop.classList.remove("active");
+          },
+          false,
+        );
+      });
+
+      drop.addEventListener("drop", (e) => {
+        const file = e.dataTransfer?.files?.[0];
+        if (file) loadFile(file);
+      });
+
+      btnOpenNewTab.addEventListener("click", () => {
+        if (!currentHtmlText) return;
+        const blob = new Blob([currentHtmlText], { type: "text/html;charset=utf-8" });
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = URL.createObjectURL(blob);
+        window.open(currentObjectUrl, "_blank", "noopener,noreferrer");
+      });
+
+      setIdle();
+    </script>
+  </body>
+</html>
