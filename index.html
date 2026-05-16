@@ -126,10 +126,6 @@
     </style>
   </head>
 
-
-
-  
-
   <body>
     <header>
       <h1>ลิงก์ดาวน์โหลด</h1>
@@ -150,6 +146,8 @@
     <script>
       const downloadList = document.getElementById("downloadList");
       const btnReload = document.getElementById("btnReload");
+
+      let currentDownloadPassword = "";
 
       function escapeHtml(value) {
         return String(value)
@@ -194,6 +192,25 @@
             <span class="message ${isError ? "error" : ""}">${escapeHtml(message)}</span>
           </li>
         `;
+      }
+
+      function checkPassword() {
+        if (!currentDownloadPassword) {
+          return true;
+        }
+
+        const password = window.prompt("กรอกรหัสผ่านสำหรับดาวน์โหลด");
+
+        if (password === null) {
+          return false;
+        }
+
+        if (password !== currentDownloadPassword) {
+          alert("รหัสผ่านไม่ถูกต้อง");
+          return false;
+        }
+
+        return true;
       }
 
       async function fetchFileWithFallback(urls) {
@@ -263,6 +280,10 @@
           button.addEventListener("click", async () => {
             const originalText = button.textContent;
 
+            if (!checkPassword()) {
+              return;
+            }
+
             try {
               button.disabled = true;
               button.textContent = "loading...";
@@ -298,6 +319,9 @@
           const manifest = await response.json();
           const basePath = normalizeBasePath(manifest.basePath);
           const files = Array.isArray(manifest.files) ? manifest.files : [];
+
+          currentDownloadPassword =
+            typeof manifest.downloadPassword === "string" ? manifest.downloadPassword : "";
 
           renderFiles(basePath, files);
         } catch (error) {
